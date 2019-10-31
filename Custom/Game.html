@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Game</title>
+</head>
+
+<body onload="song(false)">
+    <audio id="audio" onended="reset(true)"></audio>
+    <button id="pulsante" onclick="start()">Start</button>
+    <h1 id="titolo">Timer: 0s | Cerchi: 0</h1>
+    <h2 id="cps">~0 Tocchi al secondo</h2>
+    <center>
+        <select id="difficolta" onchange="difficulty()">
+            <option value="easy">Facile</option>
+            <option value="medium" selected>Intermedio</option>
+            <option value="hard">Difficile</option>
+        </select>
+        <select id="musica" onchange="song(true)">
+            <optgroup label="Anime">
+                <option value="BakemonogatariRenaiCirculation">Bakemonogatari Renai Circulation</option>
+                <option value="TokyoGhoul">Tokyo Ghoul</option>
+                <option value="NoGameNoLife">No Game No Life</option>
+                <option value="OnePunchMan">One Punch Man</option>
+                <option value="HappySugarLife">Happy Sugar Life</option>
+            </optgroup>
+            <optgroup label="Altro">
+                <option value="debug">Debug</option>
+            </optgroup>
+        </select>
+    </center>
+    <div class="cerchio" id="cerchio"></div>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .cerchio {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            background-color: cyan;
+            margin: 0;
+            padding: 0;
+            border-radius: 50%;
+            visibility: hidden;
+        }
+
+        h1,
+        h2 {
+            padding: 0;
+            margin: 0;
+            text-align: center;
+            user-select: none;
+        }
+
+        #pulsante {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border-radius: 2%;
+            width: 5%;
+            height: 4%;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        var cont = 0;
+        var timer = 0;
+        var flag = false;
+        var pressed = false;
+        var tempo = 700;
+        var audioCheck;
+        var clicks = 0;
+        let cerchio = document.getElementById("cerchio");
+        let titolo = document.getElementById("titolo");
+        let cps = document.getElementById("cps");
+        let xmlhr = new XMLHttpRequest();
+        let difficoltà = document.getElementById("difficolta");
+        let musica = document.getElementById("musica");
+        let audio = document.getElementById("audio");
+        let intervalObject;
+        cerchio.addEventListener("mouseover", update);
+        cerchio.addEventListener("click", update);
+        function updateText() {
+            titolo.innerHTML = "Timer: " + timer + "s | Cerchi: " + clicks;
+            cps.innerHTML = '~' + Math.round(cont / timer) + " Tocchi al secondo";
+        };
+        function reset(x) {
+            if (x) {
+                alert("Canzone completata in " + timer + " secondi");
+            }
+            timer = 0;
+            cont = 0;
+            clicks = 0;
+            clearInterval(intervalObject);
+            flag = false;
+        }
+        function update() {
+            if (!flag) {
+                intervalObject = setInterval(function () {
+                    timer += 1;
+                    updateText();
+                }, 1000);
+                audioCheck = setInterval(function () {
+                    if (!pressed) {
+                        audio.pause();
+                    } else {
+                        pressed = false;
+                    }
+                    updateText();
+                }, tempo);
+                flag = true;
+            }
+            clicks += 1;
+            audio.play();
+            pressed = true;
+            cerchio.style.left = Math.random() * (90 - 1) + 1 + "%";
+            cerchio.style.top = Math.random() * (80 - 1) + "%";
+            cerchio.style.backgroundColor = "rgb(" + Math.random() * 255 + ',' + Math.random() * 255 + ',' + Math.random() * 255 + ")";
+            cont += 1;
+            updateText();
+        }
+        function start() {
+            cerchio.style.visibility = "visible";
+            document.getElementById("pulsante").style.visibility = "hidden";
+        }
+        function difficulty() {
+            clearInterval(audioCheck);
+            if (difficoltà.value == "easy") {
+                tempo = 1800;
+                cerchio.style.width = "300px";
+                cerchio.style.height = "300px";
+            } else if (difficoltà.value == "medium") {
+                tempo = 1000;
+                cerchio.style.width = "170px";
+                cerchio.style.height = "170px";
+            } else if (difficoltà.value == "hard") {
+                tempo = 500;
+                cerchio.style.width = "110px";
+                cerchio.style.height = "110px";
+            }
+            audioCheck = setInterval(function () {
+                if (!pressed) {
+                    audio.pause();
+                } else {
+                    pressed = false;
+                }
+                updateText();
+            }, tempo);
+        }
+        function song(x) {
+            if (x) {
+                reset(false);
+            }
+            xmlhr = new XMLHttpRequest();
+            xmlhr.open("POST", "Songs/" + musica.value + ".mp3");
+            xmlhr.send();
+            xmlhr.onload = function () {
+                document.getElementById("audio").src = "data:audio/mp3;base64," + xmlhr.response;
+            }
+        }
+    </script>
+</body>
+
+</html>
